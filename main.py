@@ -99,12 +99,12 @@ class Rule:
     def check(self, neighbor):
         for key,values in self.values.items():
             if self.positivity:
-                if neighbor.neighbors[key] in values:
-                    return True
-            else:
                 if neighbor.neighbors[key] not in values:
-                    return True
-        return False
+                    return False
+            else:
+                if neighbor.neighbors[key] in values:
+                    return False
+        return True
                 
 
 class Rules:
