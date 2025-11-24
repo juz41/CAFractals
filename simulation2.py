@@ -1,0 +1,80 @@
+import numpy as np
+from dataclasses import dataclass
+from rules import Rules
+
+@dataclass
+class SimulationSetup():
+    name: str
+    n: int
+    state_count: int
+    rules: Rules
+    colors: list
+    offsets: list
+
+class Simulation2:
+    def __init__(self, setup, size):
+        self.n = setup.n
+        self.size = size
+        self.state_count = setup.state_count
+        self.shape = (size,) * setup.n
+        self.states = None
+        self.grid = None
+        self.offsets = setup.offsets
+        self.rules = setup.rules
+        
+        self._initialize_states()
+        if self.offsets == None:
+            self._initialize_offsets()
+        self._randomize_grid()
+        
+    def _initialize_states(self):
+        self.states = np.array([i for i in range(self.state_count)], dtype=np.uint32)
+
+    def _randomize_grid(self):
+        self.grid = np.random.choice(self.states, size=self.shape)
+
+    def _initialize_offsets(self):
+        self.offsets = []
+        for delta in np.ndindex(*(3,) * self.n):
+            offset = tuple(d - 1 for d in delta)
+            if any(offset):
+                self.offsets.append(offset)
+
+    def reset(self):
+        self.grid = self._initialize_grid()
+
+    def step(self):
+        neighbor = Neighbor2(self.n, self.states)
+        new_grid = np.copy(self.grid)
+
+        size = self.size
+
+        for index in np.ndindex(self.shape):
+            encoded = self.grid[index]
+            state = -1
+            for i, s in enumerate(self.states):
+                if s == encoded:
+                    state = i
+                    break
+            if state == -1:
+                continue
+            
+            neighbor.neighbors = [0]*self.state_count
+            for off in self.offsets:
+                neigh = tuple(index[d] + off[d] for d in range(self.n))
+                if any(neigh[d] < 0 or neigh[d] >= size for d in range(self.n)):
+                    continue
+        
+                neighbor.neighbors[self.grid[neigh]] += 1
+            new_state_index = self.rules.check(state, neighbor)
+            new_grid[index] = self.states[new_state_index]
+
+        self.grid = new_grid
+
+
+class Neighbor2:
+    def __init__(self, n, states):
+        self.n = n
+        self.states = states
+        self.state_count = len(states)
+        self.neighbors = []

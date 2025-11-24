@@ -1,25 +1,13 @@
 #!/usr/bin/env python
 
-from simulation import Simulation, SimulationSetup
+from simulation import *
+from simulation2 import *
 from rules import *
+import setups
 
-randomRules = Rules()
-randomRules.add(RandomRule())
-RandomSetup = SimulationSetup(
-    "Random",
-    n=4,
-    state_count=3,
-    rules=randomRules,
-    colors=None,
-    offsets=None,
-)
+sim = Simulation(setups.setups["Game Of Life"], 100)
 
-sim = Simulation(RandomSetup, 3)
-
-while True:
-    print("-----------------------")
-    print(sim.grid)
+for i in range(10):
+    # print(sim.grid)
+    print(i)
     sim.step()
-    print("-----------------------")
-    input()
-
