@@ -2,17 +2,20 @@ from abc import ABC, abstractmethod
 
 class IRule(ABC):
     @abstractmethod
-    def check(self, neighbor):
+    def check(self, curr, neighbor):
         pass
-        
-class Rule(IRule):
+
+
+class ClassicRule(IRule):
     def __init__(self, start, end, positivity, values):
         self.start = start
         self.end = end
         self.positivity = positivity
         self.values = values
 
-    def check(self, neighbor):
+    def check(self, curr, neighbor):
+        if curr != self.start:
+            return -1
         for key,values in self.values.items():
             if self.positivity:
                 if neighbor.neighbors[key] not in values:
@@ -21,8 +24,7 @@ class Rule(IRule):
                 if neighbor.neighbors[key] in values:
                     return -1
         return self.end
-                
-
+    
 class Rules:
     def __init__(self):
         self.rules = []
@@ -32,9 +34,8 @@ class Rules:
 
     def check(self, state, neighbor):
         for rule in self.rules:
-            if rule.start != state:
-                continue
-            res = rule.check(neighbor)
+            res = rule.check(state, neighbor)
             if res != -1:
                 return res
         return state
+    
