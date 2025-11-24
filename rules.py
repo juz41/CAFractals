@@ -31,7 +31,16 @@ class ClassicRule(IRule):
                 if neighbor.neighbors[key] in values:
                     return -1
         return self.end
-    
+
+class WeightedRandomRule(IRule):
+    def __init__(self):
+        pass
+
+    def check(self, curr, neighbor):
+        counts = np.array(neighbor.neighbors)            
+        probabilities = counts / counts.sum()
+        return np.random.choice(np.arange(neighbor.state_count), p=probabilities)
+
 class Rules:
     def __init__(self):
         self.rules = []

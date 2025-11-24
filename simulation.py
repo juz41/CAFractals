@@ -6,18 +6,17 @@ from rules import Rules
 class SimulationSetup():
     name: str
     n: int
-    size: int
     state_count: int
     rules: Rules
     colors: list
     offsets: list
 
 class Simulation:
-    def __init__(self, setup):
+    def __init__(self, setup, size):
         self.n = setup.n
-        self.size = setup.size
+        self.size = size
         self.state_count = setup.state_count
-        self.shape = (setup.size,) * setup.n
+        self.shape = (size,) * setup.n
         self.states = None
         self.grid = None
         self.offsets = setup.offsets

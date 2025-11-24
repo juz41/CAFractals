@@ -63,7 +63,7 @@ class SimulationWidget(QWidget):
         self.setWindowTitle("Cellular Automaton")
         self.setups = setups
         self.current_setup = list(setups.values())[0]
-        self.sim = Simulation(self.current_setup)
+        self.sim = Simulation(self.current_setup, 10)
         self.timer = QTimer()
         self.timer.timeout.connect(self.step)
 
@@ -87,7 +87,7 @@ class SimulationWidget(QWidget):
 
         self.grid_size_spin = QSpinBox()
         self.grid_size_spin.setMinimum(3)
-        self.grid_size_spin.setMaximum(100)
+        self.grid_size_spin.setMaximum(250)
         self.grid_size_spin.setValue(self.sim.size)
         self.grid_size_spin.valueChanged.connect(self.change_grid_size)
 
@@ -155,7 +155,7 @@ class SimulationWidget(QWidget):
 
     def change_setup(self, name):
         self.current_setup = self.setups[name]
-        self.sim = Simulation(self.current_setup)
+        self.sim = Simulation(self.current_setup, self.sim.size)
         self.grid_widget.sim = self.sim
         self.grid_widget.setup = self.current_setup
         self.grid_widget._update_cell_colors()
