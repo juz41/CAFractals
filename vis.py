@@ -7,8 +7,10 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QTimer, QRectF
 from PyQt6.QtGui import QColor, QPainter, QBrush
+
 from simulation import Simulation, SimulationSetup
 from rules import Rules, ClassicRule, RandomRule
+import setups
 
 class GridWidget(QWidget):
     def __init__(self, sim: Simulation, setup: SimulationSetup):
@@ -164,84 +166,7 @@ class SimulationWidget(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-
-    colors = [(0, 0, 0), (255, 255, 255)]
-    game_rules = Rules()
-    game_rules.add(ClassicRule(0, 1, True, {1: [3]}))
-    game_rules.add(ClassicRule(1, 0, False, {1: [2, 3]}))
-    game_setup = SimulationSetup("Game Of Life", n=2, size=10, state_count=2, rules=game_rules, colors=colors, offsets=None)
-
-    random_rules = Rules()
-    random_rules.add(RandomRule())
-    random_colors = [(100, 100, 100), (150, 150, 150), (200, 200, 200)]
-    random_setup = SimulationSetup("Random", n=2, size=10, state_count=3, rules=random_rules, colors=random_colors, offsets=None)
-
-    
-    map_colors = [
-        (0, 0, 255),
-        (255, 255, 150),
-        (0, 200, 0),
-    ]
-    map_rules = Rules()
-    map_rules.add(ClassicRule(
-        start=0,
-        end=1,
-        positivity=True,
-        values={1: [6, 7, 8]}
-    ))
-    map_rules.add(ClassicRule(
-        start=0,
-        end=1,
-        positivity=True,
-        values={2: [5, 6, 7, 8]}
-    ))
-    map_rules.add(ClassicRule(
-        start=1,
-        end=0,
-        positivity=True,
-        values={0: [5, 6, 7, 8]}
-    ))
-    map_rules.add(ClassicRule(
-        start=1,
-        end=2,  
-        positivity=True,
-        values={1: [5, 6, 7, 8]}
-    ))
-    map_rules.add(ClassicRule(
-        start=1,
-        end=2,
-        positivity=True,
-        values={2: [5, 6, 7, 8]}
-    ))
-    map_rules.add(ClassicRule(
-        start=2,
-        end=1,
-        positivity=True,
-        values={0: [3, 4, 5, 6, 7, 8]}
-    ))
-    map_rules.add(ClassicRule(
-        start=2,
-        end=1,
-        positivity=True,
-        values={1: [4, 5, 6, 7, 8]}
-    ))
-    map_setup = SimulationSetup(
-        "Map",
-        n=2,
-        size=20,
-        state_count=3,
-        rules=map_rules,
-        colors=map_colors,
-        offsets=None,
-    )
-
-    setups = {
-        "Game Of Life": game_setup,
-        "Random": random_setup,
-        "Map" : map_setup,
-    }
-
-    w = SimulationWidget(setups)
+    w = SimulationWidget(setups.setups)
     w.show()
     w.resize(600, 700)
     sys.exit(app.exec())
