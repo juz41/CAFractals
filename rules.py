@@ -1,10 +1,17 @@
 from abc import ABC, abstractmethod
+import numpy as np
 
 class IRule(ABC):
     @abstractmethod
     def check(self, curr, neighbor):
         pass
 
+class RandomRule(IRule):
+    def __init__(self):
+        pass
+
+    def check(self, curr, neighbor):
+        return np.random.randint(neighbor.state_count)
 
 class ClassicRule(IRule):
     def __init__(self, start, end, positivity, values):

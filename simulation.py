@@ -10,6 +10,7 @@ class SimulationSetup():
     state_count: int
     rules: Rules
     colors: list
+    offsets: list
 
 class Simulation:
     def __init__(self, setup):
@@ -19,12 +20,13 @@ class Simulation:
         self.shape = (setup.size,) * setup.n
         self.states = None
         self.grid = None
-        self.offsets = None
+        self.offsets = setup.offsets
         self.rules = setup.rules
         
         self._initialize_states()
+        if self.offsets == None:
+            self._initialize_offsets()
         self._randomize_grid()
-        self._initialize_offsets()
         
         self.neighbors_grid = np.zeros_like(self.grid, dtype=np.uint16)
         
@@ -82,6 +84,7 @@ class Neighbor:
     def __init__(self, n, states, value):
         self.n = n
         self.states = states
+        self.state_count = len(states)
         self.value = value
         self.neighbors = []
         self.compute_neighbors()
