@@ -34,7 +34,7 @@ class Simulation:
         return 3 ** self.n
 
     def _initialize_states(self):
-        self.states = np.array([int(self._max_neighbor_count() ** (i)) for i in range(self.state_count)], dtype=np.uint16)
+        self.states = np.array([int(self._max_neighbor_count() ** (i)) for i in range(self.state_count)], dtype=np.uint32)
 
     def _randomize_grid(self):
         self.grid = np.random.choice(self.states, size=self.shape)
@@ -53,7 +53,7 @@ class Simulation:
         pad = 1
         padded = np.pad(self.grid, [(pad, pad)] * self.n, mode='constant', constant_values=0)
 
-        self.neighbors_grid = np.zeros_like(self.grid, dtype=np.uint16)
+        self.neighbors_grid = np.zeros_like(self.grid, dtype=np.uint32)
 
         for off in self.offsets:
             slices = []
