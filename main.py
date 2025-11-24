@@ -1,17 +1,27 @@
 #!/usr/bin/env python
 
 import numpy as np
+from dataclasses import dataclass
+from rules import Rules, Rule
+
+@dataclass
+class SimulationSetup():
+    name: str
+    n: int
+    size: int
+    state_count: int
+    rules: Rules
 
 class Simulation:
-    def __init__(self, n, size, state_count, rules):
-        self.n = n
-        self.size = size
-        self.state_count = state_count
-        self.shape = (size,) * n
+    def __init__(self, setup):
+        self.n = setup.n
+        self.size = setup.size
+        self.state_count = setup.state_count
+        self.shape = (setup.size,) * setup.n
         self.states = None
         self.grid = None
         self.offsets = None
-        self.rules = rules
+        self.rules = setup.rules
         
         self._initialize_states()
         self._randomize_grid()
@@ -89,53 +99,17 @@ class Neighbor:
         self.value = value
         self.compute_neighbors()
 
-class Rule:
-    def __init__(self, start, end, positivity, values):
-        self.start = start
-        self.end = end
-        self.positivity = positivity
-        self.values = values
-
-    def check(self, neighbor):
-        for key,values in self.values.items():
-            if self.positivity:
-                if neighbor.neighbors[key] not in values:
-                    return False
-            else:
-                if neighbor.neighbors[key] in values:
-                    return False
-        return True
-                
-
-class Rules:
-    def __init__(self):
-        self.rules = []
-
-    def add(self, rule):
-        self.rules.append(rule)
-
-    def check(self, state, neighbor):
-        for rule in self.rules:
-            if rule.start != state:
-                continue
-            if rule.check(neighbor):
-                return rule.end
-        return state
-
-size = 10
-n = 2
-count = 2
-
 rules = Rules()
 rules.add(Rule(0,1,True, {1:[3]} ))
 rules.add(Rule(1,0,False, {1:[2,3]} ))
-sim = Simulation(n, size, count, rules)
+
+GameOfLifeSetup = SimulationSetup("", n=2, size=10, state_count=2, rules=rules)
+
+sim = Simulation(GameOfLifeSetup)
 
 while True:
     print("-----------------------")
     print(sim.grid)
     sim.step()
     print("-----------------------")
-    print(sim.neighbors_grid)
-    print(Neighbor(n, sim.states, sim.neighbors_grid[2,2]).neighbors)
     input()
