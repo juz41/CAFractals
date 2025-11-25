@@ -4,7 +4,6 @@ from rules import Rules
 
 @dataclass
 class SimulationSetup():
-    name: str
     n: int
     state_count: int
     rules: Rules
