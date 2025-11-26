@@ -41,6 +41,22 @@ class WeightedRandomRule(IRule):
         probabilities = counts / counts.sum()
         return np.random.choice(np.arange(neighbor.state_count), p=probabilities)
 
+class MajorityRule(IRule):
+    def __init__(self):
+        pass
+
+    def check(self, curr, neighbor):
+        max = -1
+        max_nei = -1
+        arr = neighbor.neighbors
+        for i in range(len(arr)):
+            if arr[i] == max:
+                max_nei = -1
+            if arr[i] > max:
+                max = arr[i]
+                max_nei = i
+        return max_nei
+    
 class Rules:
     def __init__(self):
         self.rules = []

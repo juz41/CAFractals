@@ -98,12 +98,24 @@ duel_setup = SimulationSetup(
     offsets=None
 )
 
+test_colors = [(255, 0, 0), (0, 0, 255)]
+test_rules= Rules()
+test_rules.add(MajorityRule())
+
+test_setup = SimulationSetup(
+    n=2,
+    state_count=2,
+    rules=test_rules,
+    colors=test_colors,
+    offsets=[(-1, -1), (1, 1), (-1, 1), (1, -1)]
+)
 setups = {
     "Game Of Life": game_setup,
     "Random": random_setup,
     "Map": map_setup,
     "Rock Paper Scissors": rps_setup,
-    "Duel" : duel_setup, 
+    "Duel" : duel_setup,
+    "Offsets test" : test_setup,
 }
 
 colors_3d = [(0, 0, 0), (255, 0, 0)]
