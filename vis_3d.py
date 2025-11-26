@@ -172,54 +172,6 @@ class GridWidget(QOpenGLWidget):
         self.update()
         super().wheelEvent(ev)
 
-    def mouseDoubleClickEvent(self, ev):
-        # simple ray unproject + march to find first voxel; toggle its state between first two states.
-        x = ev.position().x()
-        y = ev.position().y()
-        w, h = self.width(), self.height()
-        model = glGetDoublev(GL_MODELVIEW_MATRIX)
-        proj = glGetDoublev(GL_PROJECTION_MATRIX)
-        viewport = glGetIntegerv(GL_VIEWPORT)
-        # convert Qt y -> OpenGL window y
-        win_y = viewport[3] - y
-        try:
-            near = gluUnProject(x, win_y, 0.0, model, proj, viewport)
-            far  = gluUnProject(x, win_y, 1.0, model, proj, viewport)
-        except Exception:
-            return
-        if near is None or far is None:
-            return
-        nx, ny, nz = near
-        fx, fy, fz = far
-        dirx, diry, dirz = fx-nx, fy-ny, fz-nz
-        norm = math.sqrt(dirx*dirx + diry*diry + dirz*dirz)
-        if norm == 0: return
-        dirx /= norm; diry /= norm; dirz /= norm
-
-        # march along ray
-        step = 0.25
-        max_dist = self.sim.size * 3.0
-        t = 0.0
-        g = self.sim.size
-        while t < max_dist:
-            wx = nx + dirx * t
-            wy = ny + diry * t
-            wz = nz + dirz * t
-            # map world coords to grid indices (we translate grid by -g/2)
-            gx = int(round(wx + g/2.0 - 0.5))
-            gy = int(round(wy + g/2.0 - 0.5))
-            gz = int(round(wz + g/2.0 - 0.5))
-            if 0 <= gx < g and 0 <= gy < g and 0 <= gz < g:
-                s0 = self.sim.states[0]
-                s1 = self.sim.states[1] if self.sim.state_count > 1 else s0
-                curr = int(self.sim.grid[gz, gy, gx])
-                self.sim.grid[gz, gy, gx] = s0 if curr != s0 else s1
-                self.update()
-                break
-            t += step
-        super().mouseDoubleClickEvent(ev)
-
-
 # ----------------------------
 # SimulationWidget: UI with same controls (overwrites your original SimulationWidget)
 # ----------------------------
