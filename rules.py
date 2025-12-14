@@ -3,14 +3,14 @@ import numpy as np
 
 class IRule(ABC):
     @abstractmethod
-    def check(self, curr, neighbor, grid):
+    def check(self, curr, neighbor, sim):
         pass
 
 class RandomRule(IRule):
     def __init__(self):
         pass
 
-    def check(self, curr, neighbor, grid):
+    def check(self, curr, neighbor, sim):
         return np.random.randint(neighbor.state_count)
 
 class ClassicRule(IRule):
@@ -20,8 +20,8 @@ class ClassicRule(IRule):
         self.positivity = positivity
         self.values = values
 
-    def check(self, curr, neighbor, grid):
-        # print(str(curr)+" "+str(grid[neighbor.location]))
+    def check(self, curr, neighbor, sim):
+        # print(str(curr)+" "+str(sim.grid[neighbor.location]))
         if curr != self.start:
             return -1
         for key,values in self.values.items():
@@ -37,7 +37,7 @@ class WeightedRandomRule(IRule):
     def __init__(self):
         pass
 
-    def check(self, curr, neighbor, grid):
+    def check(self, curr, neighbor, sim):
         counts = np.array(neighbor.neighbors)            
         probabilities = counts / counts.sum()
         return np.random.choice(np.arange(neighbor.state_count), p=probabilities)
@@ -46,7 +46,7 @@ class MajorityRule(IRule):
     def __init__(self):
         pass
 
-    def check(self, curr, neighbor, grid):
+    def check(self, curr, neighbor, sim):
         max = -1
         max_nei = -1
         arr = neighbor.neighbors
@@ -65,9 +65,9 @@ class Rules:
     def add(self, rule):
         self.rules.append(rule)
 
-    def check(self, state, neighbor, grid):
+    def check(self, state, neighbor, sim):
         for rule in self.rules:
-            res = rule.check(state, neighbor, grid)
+            res = rule.check(state, neighbor, sim)
             if res != -1:
                 return res
         return state

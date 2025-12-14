@@ -17,6 +17,7 @@ class Simulation:
         self.state_count = setup.state_count
         self.shape = (size,) * setup.n
         self.states = None
+        self.states_dict = {}
         self.grid = None
         self.offsets = setup.offsets
         self.rules = setup.rules
@@ -33,6 +34,8 @@ class Simulation:
 
     def _initialize_states(self):
         self.states = np.array([int(self._max_neighbor_count() ** (i)) for i in range(self.state_count)], dtype=np.uint32)
+        for i in range(len(self.states)):
+            self.states_dict[self.states[i]] = i
 
     def _randomize_grid(self):
         self.grid = np.random.choice(self.states, size=self.shape)
@@ -70,13 +73,9 @@ class Simulation:
         self._compute_neighbors()
         for index in np.ndindex(self.shape):
             neighbor = Neighbor(self.n, self.states, self.neighbors_grid[index], index)
-            state = -1
-            for i in range(len(self.states)):
-                if self.grid[index] == self.states[i]:
-                    state = i
-                    break
+            state = self.states_dict.get(self.grid[index], -1)
             if state != -1:
-                self.grid[index] = self.states[self.rules.check(state, neighbor, self.grid)]
+                self.grid[index] = self.states[self.rules.check(state, neighbor, self)]
 
 class Neighbor:
     def __init__(self, n, states, value, location):
