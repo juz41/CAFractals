@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from simulation import *
-from simulation2 import *
 from rules import *
 import setups
 

@@ -69,17 +69,18 @@ class Simulation:
     def step(self):
         self._compute_neighbors()
         for index in np.ndindex(self.shape):
-            neighbor = Neighbor(self.n, self.states, self.neighbors_grid[index])
+            neighbor = Neighbor(self.n, self.states, self.neighbors_grid[index], index)
             state = -1
             for i in range(len(self.states)):
                 if self.grid[index] == self.states[i]:
                     state = i
                     break
             if state != -1:
-                self.grid[index] = self.states[self.rules.check(state, neighbor)]
+                self.grid[index] = self.states[self.rules.check(state, neighbor, self.grid)]
 
 class Neighbor:
-    def __init__(self, n, states, value):
+    def __init__(self, n, states, value, location):
+        self.location = location
         self.n = n
         self.states = states
         self.state_count = len(states)
