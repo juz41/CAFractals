@@ -21,6 +21,7 @@ class ClassicRule(IRule):
         self.values = values
 
     def check(self, curr, neighbor, grid):
+        # print(str(curr)+" "+str(grid[neighbor.location]))
         if curr != self.start:
             return -1
         for key,values in self.values.items():
