@@ -7,3 +7,5 @@ meighbour containing more info about board - certain neighbours etc
 1d, alone and with second axis as time
 
 prey predator simulations
+
+add state value -> state dictionary to simulation
