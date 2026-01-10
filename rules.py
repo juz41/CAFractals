@@ -85,6 +85,18 @@ class ProbabilisticRule(IRule):
         else:
             return self.start
 
+# use only for 1D
+class SierpinskiRule(IRule):
+    def __init__(self):
+        pass
+
+    def check(self, curr, neighbor, sim):
+        return 1
+        index = neighbor.location
+        if index > 0:
+            if sim.grid[index-1] == sim.state_dict[1]:
+                return 1
+        return 0
     
 class Rules:
     def __init__(self):

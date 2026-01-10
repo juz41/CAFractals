@@ -26,7 +26,6 @@ class GridWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         width, height = self.width(), self.height()
-        # width, height = min(width, height), min(width, height)
         rows, cols = self.sim.size, self.sim.size
         cell_width = width / cols
         cell_height = height / rows
@@ -67,10 +66,8 @@ class SimulationWidget(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.step)
 
-        # Grid widget
         self.grid_widget = GridWidget(self.sim, self.current_setup)
 
-        # Controls
         self.start_btn = QPushButton("Start")
         self.start_btn.clicked.connect(self.toggle_sim)
         self.step_btn = QPushButton("Step")
@@ -97,10 +94,9 @@ class SimulationWidget(QWidget):
                 self.setup_combo.addItem(key)
         self.setup_combo.currentTextChanged.connect(self.change_setup)
 
-        # Layout
         controls_layout = QHBoxLayout()
         controls_layout.addWidget(self.start_btn)
-        controls_layout.addWidget(self.step_btn)  # Step button
+        controls_layout.addWidget(self.step_btn)
         controls_layout.addWidget(QLabel("Speed"))
         controls_layout.addWidget(self.speed_slider)
         controls_layout.addWidget(QLabel("Size"))
@@ -163,7 +159,7 @@ class SimulationWidget(QWidget):
         self.grid_widget.update()
 
     def resizeEvent(self, event):
-        self.grid_widget.update()  # Stretch grid when window resized
+        self.grid_widget.update()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

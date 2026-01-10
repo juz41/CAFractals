@@ -48,7 +48,6 @@ class GridWidget(QOpenGLWidget):
             ramp = np.linspace(0.25, 0.9, self.sim.state_count)
             self.cell_colors = {s: (v,v,v) for s,v in zip(self.sim.states, ramp)}
 
-    # ---------------- OpenGL lifecycle ----------------
     def initializeGL(self):
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)
@@ -88,18 +87,18 @@ class GridWidget(QOpenGLWidget):
     def _draw_voxels(self):
         size = self.sim.size
         grid = self.sim.grid
+        sz, sy, sx = grid.shape
         glPushMatrix()
-        # center the cubic grid at world origin
-        glTranslatef(-size/2.0, -size/2.0, -size/2.0)
+        glTranslatef(-sx/2.0, -sy/2.0, -sz/2.0)
         half = 0.45  # voxel half-size
-        for z in range(size):
-            for y in range(size):
-                for x in range(size):
+        for z in range(sz):
+            for y in range(sy):
+                for x in range(sx):
                     st = grid[z, y, x]
                     if st == self.sim.states[0]:
                         continue
                     color = self.cell_colors.get(st, (0.6, 0.6, 0.6))
-                    glColor4f(color[0], color[1], color[2], 0.1)   # <-- transparency
+                    glColor4f(color[0], color[1], color[2], 0.1)
                     glPushMatrix()
                     glTranslatef(x + 0.5, y + 0.5, z + 0.5)
                     self._draw_cube(half)
@@ -128,7 +127,6 @@ class GridWidget(QOpenGLWidget):
         glVertex3f(-h,-h,-h); glVertex3f(-h,-h,h); glVertex3f(-h,h,h); glVertex3f(-h,h,-h)
         glEnd()
 
-    # ---------------- interaction ----------------
     def mousePressEvent(self, ev):
         self._last_pos = ev.position()
         self._left_down = bool(ev.buttons() & Qt.MouseButton.LeftButton)
@@ -142,7 +140,6 @@ class GridWidget(QOpenGLWidget):
         dx = ev.position().x() - self._last_pos.x()
         dy = ev.position().y() - self._last_pos.y()
 
-        # left drag rotates unless Ctrl is held -> panning
         if self._left_down and not (ev.modifiers() & Qt.KeyboardModifier.ControlModifier):
             self.cam_rot_x += dy * 0.4
             self.cam_rot_y += dx * 0.4
@@ -166,27 +163,21 @@ class GridWidget(QOpenGLWidget):
         self.update()
         super().wheelEvent(ev)
 
-# ----------------------------
-# SimulationWidget: UI with same controls (overwrites your original SimulationWidget)
-# ----------------------------
+
 class SimulationWidget(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Cellular Automaton 3D")
         self.setups = setups_3d.setups
 
-        # pick first setup by default
         first_key = next(iter(self.setups.keys()))
         self.current_setup = self.setups[first_key]
-        # create sim using your Simulation class: (setup, size)
         self.sim = Simulation(self.current_setup, 16)
         self.timer = QTimer()
         self.timer.timeout.connect(self.step)
 
-        # 3D Grid widget (same attribute name as original code uses)
         self.grid_widget = GridWidget(self.sim, self.current_setup)
 
-        # Controls (match your original layout)
         self.start_btn = QPushButton("Start")
         self.start_btn.clicked.connect(self.toggle_sim)
 
@@ -235,7 +226,6 @@ class SimulationWidget(QWidget):
         self.setLayout(main_layout)
         self.change_speed()
 
-    # ---------------- control callbacks ----------------
     def toggle_sim(self):
         if self.timer.isActive():
             self.timer.stop()
@@ -245,7 +235,6 @@ class SimulationWidget(QWidget):
             self.start_btn.setText("Stop")
 
     def step(self):
-        # call your Simulation.step() — should operate in 3D
         self.sim.step()
         self.grid_widget.update()
 
@@ -257,7 +246,6 @@ class SimulationWidget(QWidget):
         self.grid_widget.update()
 
     def clear_grid(self):
-        # prefer using your Simulation API if available
         if hasattr(self.sim, 'clear'):
             self.sim.clear()
         else:
@@ -266,11 +254,9 @@ class SimulationWidget(QWidget):
 
     def randomize_grid(self):
         if hasattr(self.sim, '_randomize_grid'):
-            # some of your simulations use private method
             try:
                 self.sim._randomize_grid()
             except TypeError:
-                # maybe expects a density param
                 try:
                     self.sim._randomize_grid(self.sim.random_density)
                 except Exception:
@@ -278,7 +264,6 @@ class SimulationWidget(QWidget):
         elif hasattr(self.sim, 'randomize'):
             self.sim.randomize()
         else:
-            # fallback: random fill first non-zero state
             choices = np.random.rand(self.sim.size, self.sim.size, self.sim.size)
             self.sim.grid = np.where(choices < 0.12, self.sim.states[1], self.sim.states[0]).astype(np.int32)
         self.grid_widget.update()
@@ -288,11 +273,9 @@ class SimulationWidget(QWidget):
         self.timer.setInterval(interval)
 
     def change_grid_size(self, value):
-        # prefer Simulation.resize or setting attributes similar to your original code
         if hasattr(self.sim, 'resize'):
             self.sim.resize(value)
         else:
-            # best-effort: replace grid preserving states[0]
             self.sim.size = value
             self.sim.grid = np.full((value, value, value), self.sim.states[0], dtype=np.int32)
             if hasattr(self.sim, '_randomize_grid'):
@@ -305,7 +288,6 @@ class SimulationWidget(QWidget):
 
     def change_setup(self, name):
         self.current_setup = self.setups[name]
-        # re-create simulation with same size using your Simulation constructor
         self.sim = Simulation(self.current_setup, self.sim.size)
         self.grid_widget.sim = self.sim
         self.grid_widget.setup = self.current_setup
