@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 import numpy as np
 from PyQt6.QtWidgets import (
@@ -7,7 +9,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QTimer, QRectF
 from PyQt6.QtGui import QColor, QPainter, QBrush
 
-import setups
+import setups_1d
 from simulation import SimulationSetup
 from rules import RandomRule, Rules
 
@@ -246,7 +248,7 @@ class SimulationWidget1D(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    w = SimulationWidget1D(setups.setups)
+    w = SimulationWidget1D(setups_1d.setups)
     w.show()
     w.resize(900, 700)
     sys.exit(app.exec())

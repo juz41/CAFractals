@@ -1,11 +1,5 @@
 #!/usr/bin/env python
 
-# ----------------------------
-# 3D visualization — drop-in block
-# Place this below your Simulation / rules / setups_3d definitions in the same file.
-# It will replace the 2D GridWidget/SimulationWidget with 3D versions (same names).
-# ----------------------------
-
 import math
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from PyQt6.QtCore import Qt, QTimer
@@ -20,7 +14,7 @@ import sys
 
 from simulation import Simulation, SimulationSetup
 from rules import Rules, ClassicRule, RandomRule
-import setups
+import setups_3d
 
 class GridWidget(QOpenGLWidget):
     def __init__(self, sim, setup):
@@ -179,7 +173,7 @@ class SimulationWidget(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Cellular Automaton 3D")
-        self.setups = setups.setups_3d
+        self.setups = setups_3d.setups
 
         # pick first setup by default
         first_key = next(iter(self.setups.keys()))
