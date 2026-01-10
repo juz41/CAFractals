@@ -53,7 +53,7 @@ def normalize_color(col):
     return col
 
 INIT_STEPS = 25
-SIZE = 100
+SIZE = 20
 STEPS = 200
 OMIT_ZERO = True
 
@@ -96,4 +96,8 @@ plt.ylabel("Number of cells")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.show()
+
+SAVE_FILENAME = f"plots/{name}_{SIZE}_{STEPS}.png"
+plt.savefig(SAVE_FILENAME)
+print(f"Plot saved to {SAVE_FILENAME}")
+# plt.show()

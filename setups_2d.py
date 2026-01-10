@@ -108,32 +108,26 @@ pp_rules = Rules()
 pp_rules.add(ProbabilisticRule(
     start=0,
     end=1,
-    probability=0.7,
+    probability=0.8,
     neighbor_counts={1: [2,3,4]}
 ))
 pp_rules.add(ProbabilisticRule(
     start=1,
     end=2,
-    probability=0.5,
+    probability=0.4,
     neighbor_counts={2: [1,2,3,4,5,6,7,8]}
 ))
 pp_rules.add(ProbabilisticRule(
     start=2,
     end=0,
-    probability=0.85,
+    probability=1.0,
     neighbor_counts={1: [0]}
 ))
 pp_rules.add(ProbabilisticRule(
     start=2,
     end=0,
-    probability=0.85,
+    probability=0.95,
     neighbor_counts={2: [4,5,6,7,8,9]}
-))
-pp_rules.add(ProbabilisticRule(
-    start=2,
-    end=2,
-    probability=0.8,
-    neighbor_counts={1: [1,2,3,4,5,6,7,8]}
 ))
 pp_setup = SimulationSetup(
     n=2,
