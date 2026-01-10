@@ -57,6 +57,34 @@ class MajorityRule(IRule):
                 max = arr[i]
                 max_nei = i
         return max_nei
+
+class ProbabilisticRule(IRule):
+    def __init__(self, start, end, probability=1.0, neighbor_counts=None, positivity=True):
+        self.start = start
+        self.end = end
+        self.probability = probability
+        self.neighbor_counts = neighbor_counts or {}
+        self.positivity = positivity
+
+    def check(self, curr, neighbor, sim):
+        if curr != self.start:
+            return -1
+
+        counts = neighbor.neighbors
+
+        for state, valid_counts in self.neighbor_counts.items():
+            if self.positivity:
+                if counts[state] not in valid_counts:
+                    return -1
+            else:
+                if counts[state] in valid_counts:
+                    return -1
+
+        if np.random.rand() < self.probability:
+            return self.end
+        else:
+            return self.start
+
     
 class Rules:
     def __init__(self):

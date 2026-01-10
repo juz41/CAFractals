@@ -5,7 +5,7 @@ from rules import *
 colors_3d = [(0, 0, 0), (255, 0, 0)]
 rules_3d = Rules()
 rules_3d.add(ClassicRule(start=0, end=1, positivity=True, values={1:[5]}))
-rules_3d.add(ClassicRule(start=1, end=0, positivity=True, values={1:[0,1,2,3,4,6,7,8,9,10,11,12,13,14,15,26]}))  # anything not exactly 4 or 5
+rules_3d.add(ClassicRule(start=1, end=0, positivity=True, values={1:[0,1,2,3,4,6,7,8,9,10,11,12,13,14,15,26]}))
 game3d_setup = SimulationSetup(
     n=3,
     state_count=2,
