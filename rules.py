@@ -91,12 +91,11 @@ class SierpinskiRule(IRule):
         pass
 
     def check(self, curr, neighbor, sim):
-        return 1
-        index = neighbor.location
-        if index > 0:
-            if sim.grid[index-1] == sim.state_dict[1]:
-                return 1
-        return 0
+        i = neighbor.location[0]
+        left = 1 if i > 0 and sim.grid[i - 1] == sim.states[1] else 0
+        right = 1 if i < sim.size - 1 and sim.grid[i + 1] == sim.states[1] else 0
+
+        return left ^ right
     
 class Rules:
     def __init__(self):

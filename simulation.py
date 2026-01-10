@@ -75,11 +75,13 @@ class Simulation:
 
     def step(self):
         self._compute_neighbors()
+        new_grid = self.grid.copy()
         for index in np.ndindex(self.shape):
             neighbor = Neighbor(self.n, self.states, self.neighbors_grid[index], index)
             state = self.states_dict.get(self.grid[index], -1)
             if state != -1:
-                self.grid[index] = self.states[self.rules.check(state, neighbor, self)]
+                new_grid[index] = self.states[self.rules.check(state, neighbor, self)]
+        self.grid = new_grid
         if (self.history_flag):
             self.record_history()
 
