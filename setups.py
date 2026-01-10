@@ -200,3 +200,50 @@ setups_3d["3D Life Variant A"] = setup3d_a
 setups_3d["3D Life Variant B"] = setup3d_b
 setups_3d["3D Seeds"] = setup3d_seeds
 setups_3d["3D Dense Life"] = setup3d_crowded
+
+# 5. 1D - with time as Y axis
+
+one_d_rules = Rules()
+one_d_rules.add(RandomRule())
+
+one_d_setup = SimulationSetup(
+    n=1,
+    state_count=2,
+    rules=one_d_rules,
+    colors=[(0, 0, 0), (255, 255, 255)],
+    offsets=None
+)
+
+setups["1D Elementary"] = one_d_setup
+
+
+# 6. Prey-Predator model
+pp_colors = [
+    (0, 0, 0),       # empty
+    (0, 200, 0),     # prey (green)
+    (200, 0, 0),     # predator (red)
+]
+
+pp_rules = Rules()
+
+# 1) Birth of prey: empty -> prey if exactly 3 prey neighbors
+pp_rules.add(ClassicRule(start=0, end=1, positivity=True, values={1: [3]}))
+
+# 2) Predation: prey -> empty if there's at least one predator neighbor
+pp_rules.add(ClassicRule(start=1, end=0, positivity=True, values={2: list(range(1,9))}))
+
+# 3) Predator survival: predator stays predator if there's at least one prey neighbor
+pp_rules.add(ClassicRule(start=2, end=2, positivity=True, values={1: list(range(1,9))}))
+
+# 4) Predator starvation: predator -> empty if there are no prey neighbors
+pp_rules.add(ClassicRule(start=2, end=0, positivity=True, values={1: [0]}))
+
+pp_setup = SimulationSetup(
+    n=2,
+    state_count=3,
+    rules=pp_rules,
+    colors=pp_colors,
+    offsets=None
+)
+
+setups["Prey-Predator"] = pp_setup

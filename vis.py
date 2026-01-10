@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+    
 import sys
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QPushButton, QVBoxLayout, QHBoxLayout,
@@ -92,8 +92,9 @@ class SimulationWidget(QWidget):
         self.grid_size_spin.valueChanged.connect(self.change_grid_size)
 
         self.setup_combo = QComboBox()
-        for key in setups:
-            self.setup_combo.addItem(key)
+        for key, s in setups.items():
+            if getattr(s, "n", None) == 2:
+                self.setup_combo.addItem(key)
         self.setup_combo.currentTextChanged.connect(self.change_setup)
 
         # Layout
