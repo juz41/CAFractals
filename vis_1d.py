@@ -54,14 +54,12 @@ class GridWidget1D(QWidget):
                 painter.drawRect(rect)
 
     def mousePressEvent(self, event):
-        # obliczamy, która komórka została kliknięta i cyklicznie zmieniamy jej stan
         width, height = self.width(), self.height()
         rows, cols = self.history.shape
         if cols == 0 or rows == 0:
             return
         cell_w = width / cols
         cell_h = height / rows
-        # współrzędne kliknięcia
         x = int(event.position().x() // cell_w)
         y = int(event.position().y() // cell_h)
         if 0 <= x < cols and 0 <= y < rows:
