@@ -1,6 +1,7 @@
 import numpy as np
 from simulation import SimulationSetup
 from rules import *
+import colorsys
 
 colors = [(0, 0, 0), (255, 255, 255)]
 game_rules = Rules()
@@ -138,6 +139,38 @@ pp_setup = SimulationSetup(
     names = ["empty", "prey", "predator"]
 )
 
+# https://en.wikipedia.org/wiki/Cyclic_cellular_automaton
+def cyclic_setup_factory(n: int):
+    # Generate evenly spaced rainbow colors
+    cyclic_colors = [
+        tuple(int(c * 255) for c in colorsys.hsv_to_rgb(i / n, 1.0, 1.0))
+        for i in range(n)
+    ]
+
+    cyclic_rules = Rules()
+
+    for i in range(n):
+        cyclic_rules.add(
+            ClassicRule(
+                start=i,
+                end=(i + 1) % n,
+                positivity=True,
+                values={
+                    (i + 1) % n: list(range(1, 9))  # ≥1 neighbor of next state
+                }
+            )
+        )
+
+    return SimulationSetup(
+        n=2,
+        state_count=n,
+        rules=cyclic_rules,
+        colors=cyclic_colors,
+        offsets=None,
+        names=[f"n_{i}" for i in range(n)]
+    )
+
+
 
 setups = {
     "Game Of Life": game_setup,
@@ -145,5 +178,8 @@ setups = {
     "Map": map_setup,
     "Rock Paper Scissors": rps_setup,
     "Duel" : duel_setup,
-    "Prey-Predator" : pp_setup
+    "Prey-Predator" : pp_setup,
+    "Cyclic (Rainbow) 6" : cyclic_setup_factory(6),
+    "Cyclic (Rainbow) 10" : cyclic_setup_factory(10),
+    "Cyclic (Rainbow) 16" : cyclic_setup_factory(16)
 }

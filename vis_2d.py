@@ -84,7 +84,7 @@ class SimulationWidget(QWidget):
 
         self.grid_size_spin = QSpinBox()
         self.grid_size_spin.setMinimum(3)
-        self.grid_size_spin.setMaximum(250)
+        self.grid_size_spin.setMaximum(1000)
         self.grid_size_spin.setValue(self.sim.size)
         self.grid_size_spin.valueChanged.connect(self.change_grid_size)
 
