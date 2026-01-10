@@ -10,7 +10,7 @@ from PyQt6.QtGui import QColor, QPainter, QBrush
 
 from simulation import Simulation, SimulationSetup
 from rules import Rules, ClassicRule, RandomRule
-import setups
+import setups_2d
 
 class GridWidget(QWidget):
     def __init__(self, sim: Simulation, setup: SimulationSetup):
@@ -167,7 +167,7 @@ class SimulationWidget(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    w = SimulationWidget(setups.setups)
+    w = SimulationWidget(setups_2d.setups)
     w.show()
     w.resize(600, 700)
     sys.exit(app.exec())

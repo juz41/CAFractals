@@ -9,9 +9,10 @@ class SimulationSetup():
     rules: Rules
     colors: list
     offsets: list
+    names: list
 
 class Simulation:
-    def __init__(self, setup, size):
+    def __init__(self, setup, size, history_flag=False):
         self.n = setup.n
         self.size = size
         self.state_count = setup.state_count
@@ -28,6 +29,9 @@ class Simulation:
         self._randomize_grid()
         
         self.neighbors_grid = np.zeros_like(self.grid, dtype=np.uint16)
+
+        self.history_flag = history_flag
+        self.history = []
         
     def _max_neighbor_count(self):
         return 3 ** self.n
@@ -76,6 +80,15 @@ class Simulation:
             state = self.states_dict.get(self.grid[index], -1)
             if state != -1:
                 self.grid[index] = self.states[self.rules.check(state, neighbor, self)]
+        if (self.history_flag):
+            self.record_history()
+
+    def record_history(self):
+        counts = [np.sum(self.grid == state) for state in self.states]
+        self.history.append(counts)
+
+    def clear_history(self):
+        self.history = []
 
 class Neighbor:
     def __init__(self, n, states, value, location):
