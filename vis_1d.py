@@ -14,7 +14,6 @@ from simulation import SimulationSetup
 from rules import RandomRule, Rules
 
 def eca_next_row(rule_number, row, wrap=True):
-    """Compute next binary row for elementary CA (3-cell neighborhood)."""
     width = row.size
     next_row = np.zeros_like(row)
     for i in range(width):
@@ -29,7 +28,7 @@ def eca_next_row(rule_number, row, wrap=True):
 class GridWidget1D(QWidget):
     def __init__(self, history, colors, state_count=2):
         super().__init__()
-        self.history = history  # 2D array: rows=time, cols=cells
+        self.history = history
         self.colors = colors or [(0,0,0),(255,255,255)]
         self.state_count = state_count
 
@@ -173,15 +172,12 @@ class SimulationWidget1D(QWidget):
             self.start_btn.setText("Stop")
 
     def step(self):
-        # compute next row from last non-empty row (or the bottommost existing row)
         last_row = self.history[-1].copy()
-        # if bottom row is all zeros but there exists nonzero earlier, find the last nonzero
         if np.count_nonzero(last_row) == 0:
             nonzeros = np.where(self.history.sum(axis=1) != 0)[0]
             if nonzeros.size > 0:
                 last_row = self.history[nonzeros[-1]].copy()
         next_row = eca_next_row(self.rule_number, last_row, wrap=self.wrap)
-        # scroll up and append next_row at bottom
         self.history[:-1] = self.history[1:]
         self.history[-1] = next_row
         self.grid_widget.update_history(self.history)
@@ -234,12 +230,10 @@ class SimulationWidget1D(QWidget):
 
     def change_setup(self, name):
         setup = self.setups[name]
-        # use setup colors and state_count if present
         if hasattr(setup, 'colors') and setup.colors:
             self.colors = setup.colors
         if hasattr(setup, 'state_count'):
             self.state_count = setup.state_count
-        # update the grid widget palette
         self.grid_widget.colors = self.colors
         self.grid_widget.state_count = self.state_count
         self.grid_widget.update()
