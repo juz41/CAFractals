@@ -10,27 +10,24 @@ from PyQt6.QtCore import Qt, QTimer, QRectF
 from PyQt6.QtGui import QColor, QPainter, QBrush
 
 import setups_1d
-from simulation import SimulationSetup
+from simulation import Simulation, SimulationSetup
 from rules import RandomRule, Rules
 
-def eca_next_row(rule_number, row, wrap=True):
-    width = row.size
-    next_row = np.zeros_like(row)
-    for i in range(width):
-        left = row[(i-1)%width] if wrap else (row[i-1] if i-1 >= 0 else 0)
-        center = row[i]
-        right = row[(i+1)%width] if wrap else (row[i+1] if i+1 < width else 0)
-        idx = (left << 2) | (center << 1) | (right)
-        bit = (rule_number >> idx) & 1
-        next_row[i] = bit
-    return next_row
-
 class GridWidget1D(QWidget):
-    def __init__(self, history, colors, state_count=2):
+    def __init__(self, sim: Simulation, setup: SimulationSetup, history, state_count):
         super().__init__()
-        self.history = history
-        self.colors = colors or [(0,0,0),(255,255,255)]
+        self.sim = sim
+        self.setup = setup
+        self.history = history  # numpy array shape (rows, cols) with state indices (0..state_count-1)
         self.state_count = state_count
+        self._update_cell_colors()
+
+    def _update_cell_colors(self):
+        # map index -> rgb tuple (setup.colors should be ordered same as sim.states)
+        if getattr(self.setup, "colors", None):
+            self.colors = self.setup.colors
+        else:
+            self.colors = [(150,150,150)] * self.state_count
 
     def update_history(self, history):
         self.history = history
@@ -47,8 +44,8 @@ class GridWidget1D(QWidget):
         cell_h = height / rows
         for r in range(rows):
             for c in range(cols):
-                state = int(self.history[r, c])
-                color_tuple = self.colors[state] if state < len(self.colors) else (150,150,150)
+                state_idx = int(self.history[r, c])
+                color_tuple = self.colors[state_idx] if state_idx < len(self.colors) else (150,150,150)
                 painter.setBrush(QBrush(QColor(*color_tuple)))
                 painter.setPen(Qt.GlobalColor.black)
                 rect = QRectF(c*cell_w, r*cell_h, cell_w, cell_h)
@@ -67,6 +64,15 @@ class GridWidget1D(QWidget):
             curr = int(self.history[y, x])
             nxt = (curr + 1) % self.state_count
             self.history[y, x] = nxt
+            # if user edited the last (most recent) row, reflect change into sim.grid
+            if y == rows - 1:
+                # convert state index back to encoded state value
+                try:
+                    encoded = int(self.sim.states[nxt])
+                    self.sim.grid[x] = encoded
+                except Exception:
+                    # fallback: do nothing if mapping fails
+                    pass
             self.update()
 
 class SimulationWidget1D(QWidget):
@@ -74,25 +80,36 @@ class SimulationWidget1D(QWidget):
         super().__init__()
         self.setWindowTitle("1D Cellular Automaton")
         self.setups = setups_dict
+
         # default params
         self.width_cells = 101
         self.height_rows = 200
-        self.rule_number = 30
-        self.wrap = True
-        self.state_count = 2
-        self.colors = [(0,0,0),(255,255,255)]
+
+        # choose default setup (first with n==1)
+        self.current_setup_name = None
+        for k, s in setups_dict.items():
+            if getattr(s, "n", None) == 1:
+                self.current_setup_name = k
+                break
+        if self.current_setup_name is None:
+            raise RuntimeError("No 1D setup found in setups_dict")
+        self.current_setup = setups_dict[self.current_setup_name]
+
+        # create Simulation instance
+        self.sim = Simulation(self.current_setup, self.width_cells)
+
+        # history buffer stores state indices (0..state_count-1)
+        self.state_count = self.sim.state_count
+        self.history = np.zeros((self.height_rows, self.width_cells), dtype=np.uint8)
+
+        # fill last row with current sim.grid
+        self._fill_history_from_sim(initial=True)
 
         # GUI
         self.timer = QTimer()
         self.timer.timeout.connect(self.step)
 
-        # history buffer
-        self.history = np.zeros((self.height_rows, self.width_cells), dtype=np.uint8)
-        self.grid_widget = GridWidget1D(self.history, self.colors, self.state_count)  
-        # init first row with single center cell
-        self.clear_history(single_seed=True)
-
-
+        self.grid_widget = GridWidget1D(self.sim, self.current_setup, self.history, self.state_count)
 
         # controls
         self.start_btn = QPushButton("Start")
@@ -122,20 +139,26 @@ class SimulationWidget1D(QWidget):
         self.height_spin.setValue(self.height_rows)
         self.height_spin.valueChanged.connect(self.change_height)
 
+        # rule spinner: if your setup.rules supports changing number, we'll try to set it
         self.rule_spin = QSpinBox()
         self.rule_spin.setMinimum(0)
         self.rule_spin.setMaximum(255)
-        self.rule_spin.setValue(self.rule_number)
+        # try to read current rule number if present
+        init_rule = getattr(self.sim.rules, "rule_number", 0)
+        self.rule_spin.setValue(init_rule)
         self.rule_spin.valueChanged.connect(self.change_rule)
 
         self.wrap_checkbox = QCheckBox("Wrap")
-        self.wrap_checkbox.setChecked(self.wrap)
+        # Simulation currently uses padded constant mode - no wrap built-in.
+        # We keep checkbox for UI but it won't affect Simulation unless you implement wrap in Simulation.
+        self.wrap_checkbox.setChecked(False)
         self.wrap_checkbox.stateChanged.connect(self.change_wrap)
 
         self.setup_combo = QComboBox()
         for key, s in setups_dict.items():
             if getattr(s, "n", None) == 1:
                 self.setup_combo.addItem(key)
+        self.setup_combo.setCurrentText(self.current_setup_name)
         self.setup_combo.currentTextChanged.connect(self.change_setup)
 
         # layout
@@ -163,6 +186,28 @@ class SimulationWidget1D(QWidget):
 
         self.change_speed()
 
+    def _fill_history_from_sim(self, initial=False):
+        """Fill history last row from self.sim.grid (convert encoded values -> state indices)."""
+        cols = self.width_cells
+        # vectorized mapping using sim.states_dict
+        mapper = self.sim.states_dict  # dict encoded_value -> index
+        # create array of indices
+        try:
+            idxs = np.fromiter((mapper.get(int(v), 0) for v in self.sim.grid.flatten()), dtype=np.uint8)
+            idxs = idxs.reshape(-1)
+        except Exception:
+            # fallback: attempt per-element slower approach
+            idxs = np.zeros(cols, dtype=np.uint8)
+            for i, v in enumerate(self.sim.grid.flatten()):
+                idxs[i] = mapper.get(int(v), 0)
+        # if initial: place in last row (so first steps will append above)
+        self.history = np.zeros((self.height_rows, self.width_cells), dtype=np.uint8)
+        self.history[-1, :cols] = idxs[:cols]
+        # update grid widget reference
+        if hasattr(self, "grid_widget"):
+            self.grid_widget.state_count = self.state_count
+            self.grid_widget.update_history(self.history)
+
     def toggle_sim(self):
         if self.timer.isActive():
             self.timer.stop()
@@ -172,14 +217,20 @@ class SimulationWidget1D(QWidget):
             self.start_btn.setText("Stop")
 
     def step(self):
-        last_row = self.history[-1].copy()
-        if np.count_nonzero(last_row) == 0:
-            nonzeros = np.where(self.history.sum(axis=1) != 0)[0]
-            if nonzeros.size > 0:
-                last_row = self.history[nonzeros[-1]].copy()
-        next_row = eca_next_row(self.rule_number, last_row, wrap=self.wrap)
+        # advance simulation one step
+        self.sim.step()
+        # push into history: shift up and set last row to current sim.grid indices
         self.history[:-1] = self.history[1:]
-        self.history[-1] = next_row
+        cols = min(self.width_cells, self.sim.grid.size)
+        mapper = self.sim.states_dict
+        # build last row indices
+        last_indices = np.fromiter((mapper.get(int(v), 0) for v in self.sim.grid.flatten()), dtype=np.uint8)
+        # if sim.grid shorter than width fill remaining zeros
+        if last_indices.size < self.width_cells:
+            tmp = np.zeros(self.width_cells, dtype=np.uint8)
+            tmp[:last_indices.size] = last_indices
+            last_indices = tmp
+        self.history[-1] = last_indices[:self.width_cells]
         self.grid_widget.update_history(self.history)
 
     def step_once(self):
@@ -189,33 +240,56 @@ class SimulationWidget1D(QWidget):
         self.step()
 
     def clear_history(self, single_seed=False):
-        self.history = np.zeros((self.height_rows, self.width_cells), dtype=np.uint8)
+        # reset sim.grid to base state and optionally set single seed in center
+        base = self.sim.states[0]
+        self.sim.grid.fill(base)
         if single_seed:
             mid = self.width_cells // 2
-            self.history[0, mid] = 1
-        self.grid_widget.update_history(self.history)
+            # if there's at least one non-base state, set second state as seed
+            if self.sim.state_count > 1:
+                self.sim.grid[mid] = self.sim.states[1]
+        # reset history and fill last row from sim.grid
+        self._fill_history_from_sim(initial=True)
 
     def randomize_history(self):
-        self.history = np.random.randint(0, self.state_count, size=(self.height_rows, self.width_cells), dtype=np.uint8)
-        self.grid_widget.update_history(self.history)
+        self.sim._randomize_grid()
+        self._fill_history_from_sim()
 
     def change_speed(self):
         interval = max(1, 1001 - self.speed_slider.value())
         self.timer.setInterval(interval)
 
     def change_width(self, value):
+        old_width = self.width_cells
+        old_history = self.history.copy()
+        old_sim_grid = self.sim.grid.copy()
         self.width_cells = value
-        old = self.history
-        self.history = np.zeros((self.height_rows, self.width_cells), dtype=np.uint8)
-        # copy top-left part
-        minh = min(old.shape[0], self.history.shape[0])
-        minw = min(old.shape[1], self.history.shape[1])
-        self.history[:minh, :minw] = old[:minh, :minw]
+        # recreate simulation with new width and try to preserve leftmost portion of previous grid
+        new_sim = Simulation(self.current_setup, self.width_cells)
+        minw = min(old_width, self.width_cells)
+        # try to map old indices back to encoded values to copy into new_sim.grid
+        # if old_sim_grid already encoded, copy directly truncated/padded
+        try:
+            new_sim.grid[:minw] = old_sim_grid[:minw]
+        except Exception:
+            pass
+        self.sim = new_sim
+        self.state_count = self.sim.state_count
+        # create new history, copy overlapping region of old history (right now we copy columns from left)
+        new_history = np.zeros((self.height_rows, self.width_cells), dtype=np.uint8)
+        minh = min(old_history.shape[0], new_history.shape[0])
+        minw = min(old_history.shape[1], new_history.shape[1])
+        new_history[:minh, :minw] = old_history[:minh, :minw]
+        self.history = new_history
+        self.grid_widget.sim = self.sim
+        self.grid_widget.setup = self.current_setup
+        self.grid_widget.state_count = self.state_count
+        self.grid_widget._update_cell_colors()
         self.grid_widget.update_history(self.history)
 
     def change_height(self, value):
-        self.height_rows = value
         old = self.history
+        self.height_rows = value
         self.history = np.zeros((self.height_rows, self.width_cells), dtype=np.uint8)
         minh = min(old.shape[0], self.history.shape[0])
         minw = min(old.shape[1], self.history.shape[1])
@@ -223,19 +297,36 @@ class SimulationWidget1D(QWidget):
         self.grid_widget.update_history(self.history)
 
     def change_rule(self, val):
-        self.rule_number = val
+        # best-effort: if rules object has rule_number attribute set it; otherwise ignore
+        try:
+            if hasattr(self.sim.rules, "rule_number"):
+                self.sim.rules.rule_number = val
+            else:
+                # try factory method on Rules subclass
+                if hasattr(type(self.sim.rules), "from_number"):
+                    self.sim.rules = type(self.sim.rules).from_number(val)
+        except Exception:
+            # if it fails silently ignore — better than crash
+            pass
 
     def change_wrap(self, state):
+        # placeholder: Simulation currently uses constant padding, to implement wrap you must
+        # modify Simulation._compute_neighbors to use mode='wrap' when requested.
         self.wrap = bool(state == Qt.CheckState.Checked)
 
     def change_setup(self, name):
         setup = self.setups[name]
-        if hasattr(setup, 'colors') and setup.colors:
-            self.colors = setup.colors
-        if hasattr(setup, 'state_count'):
-            self.state_count = setup.state_count
-        self.grid_widget.colors = self.colors
-        self.grid_widget.state_count = self.state_count
+        self.current_setup_name = name
+        self.current_setup = setup
+        # recreate sim with same width
+        self.sim = Simulation(self.current_setup, self.width_cells)
+        self.state_count = self.sim.state_count
+        # reset history to match new sim
+        self._fill_history_from_sim(initial=True)
+        # update widget
+        self.grid_widget.sim = self.sim
+        self.grid_widget.setup = self.current_setup
+        self.grid_widget._update_cell_colors()
         self.grid_widget.update()
 
 if __name__ == "__main__":
