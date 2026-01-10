@@ -11,7 +11,8 @@ game3d_setup = SimulationSetup(
     state_count=2,
     rules=rules_3d,
     colors=colors_3d,
-    offsets=None
+    offsets=None,
+    names = ["Dead", "Alive"]
 )
 
 rules3d_a = Rules()
@@ -23,7 +24,8 @@ setup3d_a = SimulationSetup(
     state_count=2,
     rules=rules3d_a,
     colors=[(0,0,0),(0,255,0)],
-    offsets=None
+    offsets=None,
+    names = ["Dead", "Alive"]
 )
 
 rules3d_b = Rules()
@@ -35,7 +37,8 @@ setup3d_b = SimulationSetup(
     state_count=2,
     rules=rules3d_b,
     colors=[(0,0,0),(0,0,255)],
-    offsets=None
+    offsets=None,
+    names = ["Dead", "Alive"]
 )
 
 rules3d_seeds = Rules()
@@ -46,7 +49,8 @@ setup3d_seeds = SimulationSetup(
     state_count=2,
     rules=rules3d_seeds,
     colors=[(0,0,0),(255,255,255)],
-    offsets=None
+    offsets=None,
+    names = ["Dead", "Alive"]
 )
 
 rules3d_crowded = Rules()
@@ -57,8 +61,9 @@ setup3d_crowded = SimulationSetup(
     n=3,
     state_count=2,
     rules=rules3d_crowded,
-    colors=[(0,0,0),(255,165,0)],  # orange alive
-    offsets=None
+    colors=[(0,0,0),(255,165,0)],
+    offsets=None,
+    names = ["Dead", "Alive"]
 )
 
 

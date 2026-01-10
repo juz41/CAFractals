@@ -6,12 +6,12 @@ colors = [(0, 0, 0), (255, 255, 255)]
 game_rules = Rules()
 game_rules.add(ClassicRule(0, 1, True, {1: [3]}))
 game_rules.add(ClassicRule(1, 0, False, {1: [2, 3]}))
-game_setup = SimulationSetup(n=2, state_count=2, rules=game_rules, colors=colors, offsets=None)
+game_setup = SimulationSetup(n=2, state_count=2, rules=game_rules, colors=colors, offsets=None, names = ["Dead", "Alive"])
 
 random_rules = Rules()
 random_rules.add(RandomRule())
 random_colors = [(100, 100, 100), (150, 150, 150), (200, 200, 200)]
-random_setup = SimulationSetup(n=2, state_count=3, rules=random_rules, colors=random_colors, offsets=None)
+random_setup = SimulationSetup(n=2, state_count=3, rules=random_rules, colors=random_colors, offsets=None, names = ["r1", "r2", "r3"])
 
 map_colors = [
     (0, 0, 255),
@@ -67,6 +67,7 @@ map_setup = SimulationSetup(
     rules=map_rules,
     colors=map_colors,
     offsets=None,
+    names = ["water", "beach", "land"]
 )
 
 rps_colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
@@ -82,7 +83,8 @@ rps_setup = SimulationSetup(
     state_count=3,
     rules=rps_rules,
     colors=rps_colors,
-    offsets=None
+    offsets=None,
+    names = ["rock", "paper", "scissors"]
 )
 
 duel_colors = [(255, 255, 0), (0, 255, 255)]
@@ -93,7 +95,8 @@ duel_setup = SimulationSetup(
     state_count=2,
     rules=duel_rules,
     colors=duel_colors,
-    offsets=None
+    offsets=None,
+    names = ["s1", "s2"]
 )
 
 pp_colors = [
@@ -137,7 +140,8 @@ pp_setup = SimulationSetup(
     state_count=3,
     rules=pp_rules,
     colors=pp_colors,
-    offsets=None
+    offsets=None,
+    names = ["empty", "prey", "predator"]
 )
 
 

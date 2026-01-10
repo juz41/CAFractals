@@ -9,7 +9,8 @@ one_d_setup = SimulationSetup(
     state_count=2,
     rules=one_d_rules,
     colors=[(0, 0, 0), (255, 255, 255)],
-    offsets=None
+    offsets=None,
+    names=["Dead", "Alive"]
 )
 
 
