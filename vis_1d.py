@@ -11,7 +11,6 @@ from PyQt6.QtGui import QColor, QPainter, QBrush
 
 import setups_1d
 from simulation import Simulation, SimulationSetup
-from rules import RandomRule, Rules
 
 class GridWidget1D(QWidget):
     def __init__(self, sim: Simulation, setup: SimulationSetup, history, state_count):
@@ -139,15 +138,6 @@ class SimulationWidget1D(QWidget):
         self.height_spin.setValue(self.height_rows)
         self.height_spin.valueChanged.connect(self.change_height)
 
-        # rule spinner: if your setup.rules supports changing number, we'll try to set it
-        self.rule_spin = QSpinBox()
-        self.rule_spin.setMinimum(0)
-        self.rule_spin.setMaximum(255)
-        # try to read current rule number if present
-        init_rule = getattr(self.sim.rules, "rule_number", 0)
-        self.rule_spin.setValue(init_rule)
-        self.rule_spin.valueChanged.connect(self.change_rule)
-
         self.wrap_checkbox = QCheckBox("Wrap")
         # Simulation currently uses padded constant mode - no wrap built-in.
         # We keep checkbox for UI but it won't affect Simulation unless you implement wrap in Simulation.
@@ -171,8 +161,6 @@ class SimulationWidget1D(QWidget):
         controls_layout.addWidget(self.width_spin)
         controls_layout.addWidget(QLabel("Height"))
         controls_layout.addWidget(self.height_spin)
-        controls_layout.addWidget(QLabel("Rule"))
-        controls_layout.addWidget(self.rule_spin)
         controls_layout.addWidget(self.wrap_checkbox)
         controls_layout.addWidget(QLabel("Preset"))
         controls_layout.addWidget(self.setup_combo)
@@ -295,19 +283,6 @@ class SimulationWidget1D(QWidget):
         minw = min(old.shape[1], self.history.shape[1])
         self.history[:minh, :minw] = old[:minh, :minw]
         self.grid_widget.update_history(self.history)
-
-    def change_rule(self, val):
-        # best-effort: if rules object has rule_number attribute set it; otherwise ignore
-        try:
-            if hasattr(self.sim.rules, "rule_number"):
-                self.sim.rules.rule_number = val
-            else:
-                # try factory method on Rules subclass
-                if hasattr(type(self.sim.rules), "from_number"):
-                    self.sim.rules = type(self.sim.rules).from_number(val)
-        except Exception:
-            # if it fails silently ignore — better than crash
-            pass
 
     def change_wrap(self, state):
         # placeholder: Simulation currently uses constant padding, to implement wrap you must
