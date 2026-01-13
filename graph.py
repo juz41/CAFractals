@@ -86,7 +86,7 @@ def run_simulation_and_plot(name, setup):
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
 
-    SAVE_FILENAME = f"plots/{name}_{SIZE}_{STEPS}.png"
+    SAVE_FILENAME = f"plots/{name}.png"
     plt.savefig(SAVE_FILENAME)
     print(f"Stacked plot saved to {SAVE_FILENAME}")
     # plt.show()
