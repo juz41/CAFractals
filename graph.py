@@ -15,7 +15,11 @@ def pick_setup(setups):
         arg = sys.argv[1]
         try:
             idx = int(arg)
-            if 0 <= idx < n_setups:
+            if idx == -1:
+                # Special case: run all setups
+                print("Running all setups...")
+                return "ALL", setup_list
+            elif 0 <= idx < n_setups:
                 name, s = setup_list[idx]
                 print(f"Using setup #{idx}: {name}")
                 return name, s
@@ -30,7 +34,10 @@ def pick_setup(setups):
     try:
         idx_input = input(f"Enter setup number [0-{n_setups-1}] (default 0): ")
         idx = int(idx_input)
-        if 0 <= idx < n_setups:
+        if idx == -1:
+            print("Running all setups...")
+            return "ALL", setup_list
+        elif 0 <= idx < n_setups:
             name, s = setup_list[idx]
             print(f"Using setup #{idx}: {name}")
             return name, s
@@ -44,6 +51,45 @@ def pick_setup(setups):
     print(f"Using default setup: {name}")
     return name, s
 
+def run_simulation_and_plot(name, setup):
+    print(f"Using setup: {name}")
+    sim = Simulation(setup, SIZE, True)
+    for step in range(INIT_STEPS):
+        sim.step()
+    sim.clear_history()
+
+    for step in range(STEPS):
+        sim.step()
+
+    history = np.array(sim.history)
+    n_states = history.shape[1]
+    state_labels = setup.names
+
+    colors = None
+    if getattr(setup, "colors", None):
+        colors = [normalize_color(c) for c in setup.colors[:n_states]]
+    if colors is None:
+        cmap = plt.get_cmap("tab10")
+        colors = [cmap(i % 10) for i in range(n_states)]
+
+    plt.figure(figsize=(10, 6))
+    plt.gca().set_facecolor("#d3d3d3")  # light grey
+    x = np.arange(history.shape[0])
+
+    # Stack all states
+    plt.stackplot(x, history.T, labels=state_labels, colors=colors)
+
+    plt.title(f"State counts over time - setup: {name}, size {SIZE}x{SIZE}")
+    plt.xlabel("Step")
+    plt.ylabel("Number of cells")
+    plt.legend(loc='upper left')
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+
+    SAVE_FILENAME = f"plots/{name}_{SIZE}_{STEPS}.png"
+    plt.savefig(SAVE_FILENAME)
+    print(f"Stacked plot saved to {SAVE_FILENAME}")
+    # plt.show()
 
 def normalize_color(col):
     if col is None:
@@ -53,46 +99,13 @@ def normalize_color(col):
     return col
 
 INIT_STEPS = 25
-SIZE = 20
-STEPS = 200
+SIZE = 100
+STEPS = 500
 
-name, setup = pick_setup(setups.setups)
-print(f"Using setup: {name}")
+selected_name, selected_setup = pick_setup(setups.setups)
+if selected_name == "ALL":
+    for name, setup in selected_setup:
+        run_simulation_and_plot(name, setup)
+else:
+    run_simulation_and_plot(selected_name, selected_setup)
 
-sim = Simulation(setup, SIZE, True)
-for step in range(INIT_STEPS):
-    sim.step()
-sim.clear_history()
-
-for step in range(STEPS):
-    sim.step()
-
-history = np.array(sim.history)
-n_states = history.shape[1]
-state_labels = setup.names
-
-colors = None
-if getattr(setup, "colors", None):
-    colors = [normalize_color(c) for c in setup.colors[:n_states]]
-if colors is None:
-    cmap = plt.get_cmap("tab10")
-    colors = [cmap(i % 10) for i in range(n_states)]
-
-plt.figure(figsize=(10, 6))
-plt.gca().set_facecolor("#d3d3d3")  # light grey
-x = np.arange(history.shape[0])
-
-# Stack all states
-plt.stackplot(x, history.T, labels=state_labels, colors=colors)
-
-plt.title(f"State counts over time — setup: {name}, size {SIZE}x{SIZE}")
-plt.xlabel("Step")
-plt.ylabel("Number of cells")
-plt.legend(loc='upper left')
-plt.grid(True, alpha=0.3)
-plt.tight_layout()
-
-SAVE_FILENAME = f"plots/{name}_{SIZE}_{STEPS}.png"
-plt.savefig(SAVE_FILENAME)
-print(f"Stacked plot saved to {SAVE_FILENAME}")
-# plt.show()
