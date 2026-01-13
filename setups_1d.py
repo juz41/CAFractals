@@ -25,7 +25,25 @@ sierp_setup = SimulationSetup(
 )
 
 
+def setup_from_1d(rule_number: int, alive_color=(255, 255, 255), dead_color=(0, 0, 0)):
+    rules = Rules()
+    rules.add(RuleN(rule_number))
+
+    setup = SimulationSetup(
+        n=1,
+        state_count=2,
+        rules=rules,
+        colors=[dead_color, alive_color],
+        offsets=None,
+        names=["Dead", "Alive"]
+    )
+    return setup
+
+
+
+
 setups = {
     "1D Elementary" : one_d_setup,
-    "Sierpinski Triangle" : sierp_setup
+    "Sierpinski Triangle" : sierp_setup,
+    "Sierpinski Triangle (Rule90)" : setup_from_1d(90),
 }

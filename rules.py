@@ -96,6 +96,21 @@ class SierpinskiRule(IRule):
         right = 1 if i < sim.size - 1 and sim.grid[i + 1] == sim.states[1] else 0
 
         return left ^ right
+
+class RuleN(IRule):
+    def __init__(self, rule_number: int):
+        assert 0 <= rule_number <= 255, "Rule number must be 0-255"
+        self.rule_bin = f"{rule_number:08b}"
+
+    def check(self, curr, neighbor, sim):
+        i = neighbor.location[0]
+        left = 1 if i > 0 and sim.grid[i - 1] == sim.states[1] else 0
+        center = 1 if sim.grid[i] == sim.states[1] else 0
+        right = 1 if i < sim.size - 1 and sim.grid[i + 1] == sim.states[1] else 0
+        neighborhood = (left << 2) | (center << 1) | right
+        output = int(self.rule_bin[7 - neighborhood])
+        return output
+
     
 class Rules:
     def __init__(self):

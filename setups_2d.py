@@ -156,7 +156,7 @@ def cyclic_setup_factory(n: int):
                 end=(i + 1) % n,
                 positivity=True,
                 values={
-                    (i + 1) % n: list(range(1, 9))  # ≥1 neighbor of next state
+                    (i + 1) % n: list(range(1, 9))
                 }
             )
         )
@@ -170,6 +170,27 @@ def cyclic_setup_factory(n: int):
         names=[f"n_{i}" for i in range(n)]
     )
 
+def setup_from_b_s(rule_string: str, alive_color=(255, 255, 255), dead_color=(0, 0, 0)):
+    b_part, s_part = rule_string.upper().split('/')
+    b_nums = [int(c) for c in b_part.replace('B','')]
+    s_nums = [int(c) for c in s_part.replace('S','')]
+
+    rules = Rules()
+    rules.add(ClassicRule(start=0, end=1, positivity=True, values={1: b_nums}))
+    rules.add(ClassicRule(start=1, end=1, positivity=True, values={1: s_nums}))
+    all_counts = list(range(0, 9))
+    dead_counts = [n for n in all_counts if n not in s_nums]
+    rules.add(ClassicRule(start=1, end=0, positivity=True, values={1: dead_counts}))
+
+    setup = SimulationSetup(
+        n=2,
+        state_count=2,
+        rules=rules,
+        colors=[dead_color, alive_color],
+        offsets=None,
+        names=["Dead", "Alive"]
+    )
+    return setup
 
 
 setups = {
@@ -181,5 +202,8 @@ setups = {
     "Prey-Predator" : pp_setup,
     "Cyclic (Rainbow) 6" : cyclic_setup_factory(6),
     "Cyclic (Rainbow) 10" : cyclic_setup_factory(10),
-    "Cyclic (Rainbow) 16" : cyclic_setup_factory(16)
+    "Cyclic (Rainbow) 16" : cyclic_setup_factory(16),
+    "Game Of Life (B3/S23)" : setup_from_b_s("B3/S23"),
+    "Maze (B3/S12345)" : setup_from_b_s("B3/S12345"),
+    "Mazectric (B3/S1234)" : setup_from_b_s("B3/S1234"),
 }

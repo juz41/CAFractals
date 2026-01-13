@@ -31,5 +31,5 @@ game3d_b_setup = SimulationSetup(
 
 setups = {
     "Game Of Life 3D": game3d_setup,
-    "Game Of Life 3D Sparse": game3d_b_setup
+    "Game Of Life 3D Sparse": game3d_b_setup,
 }
