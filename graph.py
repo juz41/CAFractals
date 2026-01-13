@@ -55,7 +55,6 @@ def normalize_color(col):
 INIT_STEPS = 25
 SIZE = 20
 STEPS = 200
-OMIT_ZERO = True
 
 name, setup = pick_setup(setups.setups)
 print(f"Using setup: {name}")
@@ -79,25 +78,21 @@ if colors is None:
     cmap = plt.get_cmap("tab10")
     colors = [cmap(i % 10) for i in range(n_states)]
 
-if OMIT_ZERO:
-    history = history[:, 1:]
-    state_labels = state_labels[1:]
-    colors = colors[1:]
-
 plt.figure(figsize=(10, 6))
 plt.gca().set_facecolor("#d3d3d3")  # light grey
 x = np.arange(history.shape[0])
-for i, label in enumerate(state_labels):
-    plt.plot(x, history[:, i], label=label, color=colors[i])
+
+# Stack all states
+plt.stackplot(x, history.T, labels=state_labels, colors=colors)
 
 plt.title(f"State counts over time — setup: {name}, size {SIZE}x{SIZE}")
 plt.xlabel("Step")
 plt.ylabel("Number of cells")
-plt.legend()
-plt.grid(True)
+plt.legend(loc='upper left')
+plt.grid(True, alpha=0.3)
 plt.tight_layout()
 
 SAVE_FILENAME = f"plots/{name}_{SIZE}_{STEPS}.png"
 plt.savefig(SAVE_FILENAME)
-print(f"Plot saved to {SAVE_FILENAME}")
+print(f"Stacked plot saved to {SAVE_FILENAME}")
 # plt.show()
