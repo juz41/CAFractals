@@ -99,8 +99,8 @@ def normalize_color(col):
     return col
 
 INIT_STEPS = 25
-SIZE = 100
-STEPS = 500
+SIZE = 30
+STEPS = 2000
 
 selected_name, selected_setup = pick_setup(setups.setups)
 if selected_name == "ALL":

@@ -203,7 +203,6 @@ setups = {
     "Cyclic (Rainbow) 6" : cyclic_setup_factory(6),
     "Cyclic (Rainbow) 10" : cyclic_setup_factory(10),
     "Cyclic (Rainbow) 16" : cyclic_setup_factory(16),
-    "Game Of Life (B3/S23)" : setup_from_b_s("B3/S23"),
-    "Maze (B3/S12345)" : setup_from_b_s("B3/S12345"),
-    "Mazectric (B3/S1234)" : setup_from_b_s("B3/S1234"),
+    "Maze (B3S12345)" : setup_from_b_s("B3/S12345"),
+    "Mazectric (B3S1234)" : setup_from_b_s("B3/S1234"),
 }
