@@ -17,12 +17,11 @@ class GridWidget1D(QWidget):
         super().__init__()
         self.sim = sim
         self.setup = setup
-        self.history = history  # numpy array shape (rows, cols) with state indices (0..state_count-1)
+        self.history = history
         self.state_count = state_count
         self._update_cell_colors()
 
     def _update_cell_colors(self):
-        # map index -> rgb tuple (setup.colors should be ordered same as sim.states)
         if getattr(self.setup, "colors", None):
             self.colors = self.setup.colors
         else:
@@ -63,14 +62,11 @@ class GridWidget1D(QWidget):
             curr = int(self.history[y, x])
             nxt = (curr + 1) % self.state_count
             self.history[y, x] = nxt
-            # if user edited the last (most recent) row, reflect change into sim.grid
             if y == rows - 1:
-                # convert state index back to encoded state value
                 try:
                     encoded = int(self.sim.states[nxt])
                     self.sim.grid[x] = encoded
                 except Exception:
-                    # fallback: do nothing if mapping fails
                     pass
             self.update()
 
@@ -80,11 +76,9 @@ class SimulationWidget1D(QWidget):
         self.setWindowTitle("1D Cellular Automaton")
         self.setups = setups_dict
 
-        # default params
         self.width_cells = 101
         self.height_rows = 200
 
-        # choose default setup (first with n==1)
         self.current_setup_name = None
         for k, s in setups_dict.items():
             if getattr(s, "n", None) == 1:
@@ -94,23 +88,18 @@ class SimulationWidget1D(QWidget):
             raise RuntimeError("No 1D setup found in setups_dict")
         self.current_setup = setups_dict[self.current_setup_name]
 
-        # create Simulation instance
         self.sim = Simulation(self.current_setup, self.width_cells)
 
-        # history buffer stores state indices (0..state_count-1)
         self.state_count = self.sim.state_count
         self.history = np.zeros((self.height_rows, self.width_cells), dtype=np.uint8)
 
-        # fill last row with current sim.grid
         self._fill_history_from_sim(initial=True)
 
-        # GUI
         self.timer = QTimer()
         self.timer.timeout.connect(self.step)
 
         self.grid_widget = GridWidget1D(self.sim, self.current_setup, self.history, self.state_count)
 
-        # controls
         self.start_btn = QPushButton("Start")
         self.start_btn.clicked.connect(self.toggle_sim)
         self.step_btn = QPushButton("Step")
@@ -139,8 +128,6 @@ class SimulationWidget1D(QWidget):
         self.height_spin.valueChanged.connect(self.change_height)
 
         self.wrap_checkbox = QCheckBox("Wrap")
-        # Simulation currently uses padded constant mode - no wrap built-in.
-        # We keep checkbox for UI but it won't affect Simulation unless you implement wrap in Simulation.
         self.wrap_checkbox.setChecked(False)
         self.wrap_checkbox.stateChanged.connect(self.change_wrap)
 
@@ -151,7 +138,6 @@ class SimulationWidget1D(QWidget):
         self.setup_combo.setCurrentText(self.current_setup_name)
         self.setup_combo.currentTextChanged.connect(self.change_setup)
 
-        # layout
         controls_layout = QHBoxLayout()
         controls_layout.addWidget(self.start_btn)
         controls_layout.addWidget(self.step_btn)
@@ -175,23 +161,17 @@ class SimulationWidget1D(QWidget):
         self.change_speed()
 
     def _fill_history_from_sim(self, initial=False):
-        """Fill history last row from self.sim.grid (convert encoded values -> state indices)."""
         cols = self.width_cells
-        # vectorized mapping using sim.states_dict
-        mapper = self.sim.states_dict  # dict encoded_value -> index
-        # create array of indices
+        mapper = self.sim.states_dict
         try:
             idxs = np.fromiter((mapper.get(int(v), 0) for v in self.sim.grid.flatten()), dtype=np.uint8)
             idxs = idxs.reshape(-1)
         except Exception:
-            # fallback: attempt per-element slower approach
             idxs = np.zeros(cols, dtype=np.uint8)
             for i, v in enumerate(self.sim.grid.flatten()):
                 idxs[i] = mapper.get(int(v), 0)
-        # if initial: place in last row (so first steps will append above)
         self.history = np.zeros((self.height_rows, self.width_cells), dtype=np.uint8)
         self.history[-1, :cols] = idxs[:cols]
-        # update grid widget reference
         if hasattr(self, "grid_widget"):
             self.grid_widget.state_count = self.state_count
             self.grid_widget.update_history(self.history)
@@ -205,15 +185,10 @@ class SimulationWidget1D(QWidget):
             self.start_btn.setText("Stop")
 
     def step(self):
-        # advance simulation one step
         self.sim.step()
-        # push into history: shift up and set last row to current sim.grid indices
         self.history[:-1] = self.history[1:]
-        cols = min(self.width_cells, self.sim.grid.size)
         mapper = self.sim.states_dict
-        # build last row indices
         last_indices = np.fromiter((mapper.get(int(v), 0) for v in self.sim.grid.flatten()), dtype=np.uint8)
-        # if sim.grid shorter than width fill remaining zeros
         if last_indices.size < self.width_cells:
             tmp = np.zeros(self.width_cells, dtype=np.uint8)
             tmp[:last_indices.size] = last_indices
@@ -228,15 +203,12 @@ class SimulationWidget1D(QWidget):
         self.step()
 
     def clear_history(self, single_seed=False):
-        # reset sim.grid to base state and optionally set single seed in center
         base = self.sim.states[0]
         self.sim.grid.fill(base)
         if single_seed:
             mid = self.width_cells // 2
-            # if there's at least one non-base state, set second state as seed
             if self.sim.state_count > 1:
                 self.sim.grid[mid] = self.sim.states[1]
-        # reset history and fill last row from sim.grid
         self._fill_history_from_sim(initial=True)
 
     def randomize_history(self):
@@ -252,18 +224,14 @@ class SimulationWidget1D(QWidget):
         old_history = self.history.copy()
         old_sim_grid = self.sim.grid.copy()
         self.width_cells = value
-        # recreate simulation with new width and try to preserve leftmost portion of previous grid
         new_sim = Simulation(self.current_setup, self.width_cells)
         minw = min(old_width, self.width_cells)
-        # try to map old indices back to encoded values to copy into new_sim.grid
-        # if old_sim_grid already encoded, copy directly truncated/padded
         try:
             new_sim.grid[:minw] = old_sim_grid[:minw]
         except Exception:
             pass
         self.sim = new_sim
         self.state_count = self.sim.state_count
-        # create new history, copy overlapping region of old history (right now we copy columns from left)
         new_history = np.zeros((self.height_rows, self.width_cells), dtype=np.uint8)
         minh = min(old_history.shape[0], new_history.shape[0])
         minw = min(old_history.shape[1], new_history.shape[1])
@@ -285,20 +253,15 @@ class SimulationWidget1D(QWidget):
         self.grid_widget.update_history(self.history)
 
     def change_wrap(self, state):
-        # placeholder: Simulation currently uses constant padding, to implement wrap you must
-        # modify Simulation._compute_neighbors to use mode='wrap' when requested.
         self.wrap = bool(state == Qt.CheckState.Checked)
 
     def change_setup(self, name):
         setup = self.setups[name]
         self.current_setup_name = name
         self.current_setup = setup
-        # recreate sim with same width
         self.sim = Simulation(self.current_setup, self.width_cells)
         self.state_count = self.sim.state_count
-        # reset history to match new sim
         self._fill_history_from_sim(initial=True)
-        # update widget
         self.grid_widget.sim = self.sim
         self.grid_widget.setup = self.current_setup
         self.grid_widget._update_cell_colors()
