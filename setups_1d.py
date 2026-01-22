@@ -42,5 +42,8 @@ def setup_from_1d(rule_number: int, alive_color=(255, 255, 255), dead_color=(0, 
 setups = {
     "1D Elementary" : one_d_setup,
     "Sierpinski Triangle" : sierp_setup,
-    "Sierpinski Triangle (Rule90)" : setup_from_1d(90),
+    "(Rule90)" : setup_from_1d(90),
+    "(Rule30)" : setup_from_1d(30),
+    "(Rule110)" : setup_from_1d(110),
+    "(Rule150)" : setup_from_1d(150),
 }
